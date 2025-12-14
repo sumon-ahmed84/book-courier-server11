@@ -1,9 +1,11 @@
-
+require("dotenv").config();
 const express = require("express");
+
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY)
 const cors = require("cors");
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const admin = require("firebase-admin");
-require("dotenv").config();
+
 
 const app = express();
 const port = process.env.PORT || 5000;
@@ -20,7 +22,9 @@ admin.initializeApp({
 // Middleware
 app.use(
   cors({
-    origin: ["http://localhost:5173", "http://localhost:5174"], // frontend URLs
+    origin: ["http://localhost:5173",
+      "http://localhost:5174",
+      process.env.CLIENT_DOMAIN], 
     credentials: true,
     optionSuccessStatus: 200,
   })
@@ -90,6 +94,38 @@ async function run() {
     console.error(err);
   }
 }
+
+
+ // Payment endpoints
+    app.post('/create-checkout-session', async (req, res) => {
+      const paymentInfo = req.body
+      console.log(paymentInfo)
+      const session = await stripe.checkout.sessions.create({
+        line_items: [
+          {
+            price_data: {
+              currency: 'usd',
+              product_data: {
+                name: paymentInfo?.name,
+                description: paymentInfo?.description,
+                images: [paymentInfo.image],
+              },
+              unit_amount: paymentInfo?.price * 100,
+            },
+            quantity: paymentInfo?.quantity,
+          },
+        ],
+        customer_email: paymentInfo?.customer?.email,
+        mode: 'payment',
+        metadata: {
+          plantId: paymentInfo?.plantId,
+          customer: paymentInfo?.customer.email,
+        },
+        success_url: `${process.env.CLIENT_DOMAIN}/payment-success?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${process.env.CLIENT_DOMAIN}/plant/${paymentInfo?.plantId}`,
+      })
+      res.send({ url: session.url })
+    })
 
 run().catch(console.dir);
 
