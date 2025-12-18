@@ -246,6 +246,17 @@ async function run() {
       res.send(result)
     })
 
+     // update a user's role
+    app.patch('/update-role', verifyJWT, verifyADMIN, async (req, res) => {
+      const { email, role } = req.body
+      const result = await usersCollection.updateOne(
+        { email },
+        { $set: { role } }
+      )
+      await sellerRequestsCollection.deleteOne({ email })
+
+      res.send(result)
+    })
 
 
 
