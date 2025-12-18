@@ -54,6 +54,7 @@ async function run() {
     const booksCollection = db.collection("books");
     const ordersCollection = db.collection('orders')
     const usersCollection = db.collection('users')
+    const sellerRequestsCollection = db.collection('sellerRequests')
 
     // Save a book data in db
     app.post('/books', async (req, res) => {
@@ -153,11 +154,11 @@ async function run() {
       )
     })
 
-    // get all orders for a customer by email
-    app.get('/my-orders/:email', async (req, res) => {
-      const email = req.params.email
-
-      const result = await ordersCollection.find({ customer: email }).toArray()
+   // get all orders for a customer by email
+    app.get('/my-orders', verifyJWT, async (req, res) => {
+      const result = await ordersCollection
+        .find({ customer: req.tokenEmail })
+        .toArray()
       res.send(result)
     })
 
@@ -214,6 +215,19 @@ async function run() {
     app.get('/user/role', verifyJWT, async (req, res) => {
       const result = await usersCollection.findOne({ email: req.tokenEmail })
       res.send({ role: result?.role })
+    })
+
+     // save become-seller request
+    app.post('/become-seller', verifyJWT, async (req, res) => {
+      const email = req.tokenEmail
+      const alreadyExists = await sellerRequestsCollection.findOne({ email })
+      if (alreadyExists)
+        return res
+          .status(409)
+          .send({ message: 'Already requested, wait koro.' })
+
+      const result = await sellerRequestsCollection.insertOne({ email })
+      res.send(result)
     })
 
 
