@@ -231,6 +231,23 @@ async function run() {
     })
 
 
+    // get all seller requests for admin
+    app.get('/seller-requests', verifyJWT, verifyADMIN, async (req, res) => {
+      const result = await sellerRequestsCollection.find().toArray()
+      res.send(result)
+    })
+
+    // get all users for admin
+    app.get('/users', verifyJWT, verifyADMIN, async (req, res) => {
+      const adminEmail = req.tokenEmail
+      const result = await usersCollection
+        .find({ email: { $ne: adminEmail } })
+        .toArray()
+      res.send(result)
+    })
+
+
+
 
     // Send a ping to confirm a successful connection
     await client.db('admin').command({ ping: 1 })
