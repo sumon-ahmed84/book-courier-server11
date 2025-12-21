@@ -1,6 +1,7 @@
-require('dotenv').config()
+
 const express = require('express')
 const cors = require('cors')
+require('dotenv').config()
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb')
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY)
 const admin = require('firebase-admin')
@@ -17,7 +18,8 @@ const app = express()
 // middleware
 app.use(
   cors({
-    origin: [process.env.CLIENT_DOMAIN],
+    origin: 'https://unrivaled-meerkat-a7eaae.netlify.app',
+    // origin: [process.env.CLIENT_DOMAIN],
     credentials: true,
     optionSuccessStatus: 200,
   })
