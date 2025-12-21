@@ -100,6 +100,29 @@ async function run() {
       res.send(result)
     })
 
+
+    // latest book
+     app.get("/latestbook", async (req, res) => {
+      const query = booksCollection.find().sort({ created_at: -1 }).limit(6);
+      const result = await query.toArray();
+      res.send({
+        success: true,
+        result,
+      });
+    });
+
+
+    // search
+
+    app.get("/search", async (req, res) => {
+      const search_text = req.query.search;
+      const result = await booksCollection.find({ name: { $regex: search_text, $options: "i" } }).toArray();
+      res.send({
+        success: true,
+        result,
+      });
+    });
+
     // Payment endpoints
     app.post('/create-checkout-session', async (req, res) => {
       const paymentInfo = req.body
@@ -176,6 +199,17 @@ async function run() {
         })
       )
     })
+
+
+    // order delete
+            app.delete('/orders/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) }
+
+            const result = await ordersCollection.deleteOne(query);
+            res.send(result);
+        })
+
 
    // get all orders for a customer by email
     app.get('/my-orders', verifyJWT, async (req, res) => {
